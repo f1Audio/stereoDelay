@@ -120,7 +120,7 @@ void StereoDelayAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     for (int i = 0; i < 2; i++) {
         delayBuffer[i].init(sampleRate * 2 +1);
     }
-    delayTime.reset(sampleRate, 0.0005f);
+    delayTime.reset(sampleRate, 0.3f);
 }
 
 
@@ -252,14 +252,18 @@ void StereoDelayAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     
   
     for (int i = 0; i < numSamples; ++i) {
+        // Update and fetch the current smoothed delay time in samples
+        // Note: This assumes 'time' is the delay time in milliseconds you wish to smooth transition to
+        float currentSmoothedDelayTimeInSamples = delayTime.getNextValue() * sampleRate / 1000.0f;
+        
         // read input signal
         const float inputL = leftChannelData[i];
         const float inputR = rightChannelData[i];
         
         
         // read delayed signal
-        float delayL = delayBuffer[0].read(time * sampleRate / 1000);
-        float delayR = delayBuffer[1].read(time * sampleRate / 1000);
+        float delayL = delayBuffer[0].read(currentSmoothedDelayTimeInSamples);
+        float delayR = delayBuffer[1].read(currentSmoothedDelayTimeInSamples);
 
         // create input for delay line + write feedback
        
